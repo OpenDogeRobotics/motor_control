@@ -72,7 +72,7 @@ source install/setup.bash
 
 ```bash
 source install/setup.bash
-ros2 launch motor_control motor_control_launch.py
+ros2 launch motor_control_interface motor_control_launch.py
 ```
 
 该启动文件会启动：

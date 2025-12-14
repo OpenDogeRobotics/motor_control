@@ -17,9 +17,12 @@ MotorHardware::MotorHardware()
 MotorHardware::~MotorHardware()
 {
   if (motor_controller_) {
-    // 禁用所有电机
+    // 禁用所有仍处于启用状态的电机
     for (size_t i = 0; i < motor_ids_.size(); i++) {
-      motor_controller_->set_motion_disable(motor_ids_[i]);
+      if (motor_enabled_[i]) {
+        motor_controller_->set_motion_disable(motor_ids_[i]);
+        motor_enabled_[i] = false;
+      }
     }
     motor_controller_->close_can();
   }
@@ -29,6 +32,11 @@ CallbackReturn MotorHardware::on_init(const hardware_interface::HardwareInfo & i
 {
   // 保存硬件信息
   info_ = info;
+
+  // 调试：打印硬件参数
+  for (const auto& param : info.hardware_parameters) {
+    RCLCPP_INFO(rclcpp::get_logger("MotorHardware"), "Hardware parameter '%s' = '%s'", param.first.c_str(), param.second.c_str());
+  }
 
   // 初始化状态和命令向量
   joint_positions_.resize(info.joints.size(), std::numeric_limits<double>::quiet_NaN());
@@ -60,6 +68,10 @@ CallbackReturn MotorHardware::on_init(const hardware_interface::HardwareInfo & i
   // 检查电机配置
   for (size_t i = 0; i < info_.joints.size(); i++) {
     const hardware_interface::ComponentInfo & joint = info_.joints[i];
+    // 调试：打印关节参数
+    for (const auto& param : joint.parameters) {
+      RCLCPP_INFO(rclcpp::get_logger("MotorHardware"), "Joint '%s' parameter '%s' = '%s'", joint.name.c_str(), param.first.c_str(), param.second.c_str());
+    }
     
     // 检查是否为位置控制器
     if (joint.command_interfaces.size() != 1) {
@@ -114,6 +126,7 @@ CallbackReturn MotorHardware::on_init(const hardware_interface::HardwareInfo & i
     if (motor_id_it != joint.parameters.end()) {
       uint8_t motor_id = std::stoi(motor_id_it->second);
       motor_ids_[i] = motor_id;
+      RCLCPP_INFO(rclcpp::get_logger("MotorHardware"), "Joint '%s' configured with motor ID %d", joint.name.c_str(), motor_id);
     } else {
       RCLCPP_FATAL(rclcpp::get_logger("MotorHardware"), "Missing 'motor_id' parameter for joint '%s'", joint.name.c_str());
       return CallbackReturn::ERROR;
