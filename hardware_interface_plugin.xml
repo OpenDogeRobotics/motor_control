@@ -1,0 +1,5 @@
+<library path="libmotor_hardware_interface">
+  <class name="motor_control_interface/MotorHardware" type="MotorHardware" base_class_type="hardware_interface::SystemInterface">
+    <description>ROS2 Hardware Interface for Motor Control via CAN bus</description>
+  </class>
+</library>
