@@ -33,12 +33,20 @@ def generate_launch_description():
         package='controller_manager',
         executable='ros2_control_node',
         parameters=[
-            {'robot_description': robot_description},
             config_file
         ],
         output='screen'
     )
     
+    # 添加 robot_state_publisher 节点
+    robot_state_publisher_node = Node(
+        package='robot_state_publisher',
+        executable='robot_state_publisher',
+        name='robot_state_publisher',
+        parameters=[{'robot_description': robot_description}],
+        output='screen'
+    )
+
     # 添加位置控制器节点
     position_controller_node = Node(
         package='controller_manager',
@@ -57,6 +65,7 @@ def generate_launch_description():
     
     # 将节点添加到启动描述
     ld.add_action(controller_manager_node)
+    ld.add_action(robot_state_publisher_node)
     ld.add_action(joint_state_publisher_node)
     ld.add_action(position_controller_node)
     
